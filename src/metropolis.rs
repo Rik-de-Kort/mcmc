@@ -4,11 +4,12 @@ use num::{Float, FromPrimitive};
 use rand::Rng;
 use rand::distributions::{Distribution};
 
+use crate::quality_of_life::*;
 
 fn next<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(x: F, pi: fn(F) -> F, proposal: &D, rng: &mut R) -> F {
     let candidate = x + proposal.sample(rng);
 
-    let alpha = (pi(candidate) / pi(x)).min(F::one());
+    let alpha = min(F::one(), pi(candidate) / pi(x));
     let u = F::from_f64(rng.gen()).unwrap();  // Draws uniform [0, 1)
     if u <= alpha {
         return candidate;
@@ -16,7 +17,6 @@ fn next<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(x: F, pi: fn(F) -> F
         return x;
     }
 }
-
 
 pub fn metropolis<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(pi: fn(F) -> F, proposal: &D, rng: &mut R) -> Vec<F> {
     let local_next = |x: F, rng: &mut R| { next(x, pi, proposal, rng) };
@@ -41,9 +41,12 @@ pub fn metropolis<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(pi: fn(F) 
 }
 
 
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use ::rand_distr::Normal;
 
     #[test]
@@ -51,19 +54,6 @@ mod tests {
         assert_eq!(1.0, 1.0);
     }
 
-    use std::iter::Sum;
-    use std::ops::Div;
-    use num::ToPrimitive;
-
-    fn mean<'a, T: 'a>(v: &'a [T]) -> Option<T>
-    where
-        T: ToPrimitive + FromPrimitive + Sum<&'a T> + Div
-    {
-        let sum = v.iter().sum::<T>();
-        let n = T::from_usize(v.len())?;
-
-        Some(sum / n)
-    }
 
     #[test]
     fn test_standard_normal() {
@@ -71,10 +61,11 @@ mod tests {
         // parameter estimates are accurate.
         let mut rng = rand::thread_rng();
         let proposal = Normal::new(0.0, 1.0).unwrap();
-        let pi = |x: f64| -> f64 { (-x.powi(2)).exp() };
+        let pi = |x: f64| -> f64 { exp(-x.powi(2)) };
         let result = metropolis(pi, &proposal, &mut rng);
         
-        assert!(mean(&result).unwrap() < 0.01);
+        assert!(mean(&result).abs() < 0.005);
+        assert!(std(&result) <= 1.1)
     }
 }
 
