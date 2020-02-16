@@ -1,12 +1,8 @@
-use num;
-use num::Float;
-
 use rand::Rng;
 use rand::distributions::{Distribution};
-use ::rand_distr::Normal;
 
 
-fn next<R: Rng>(x: f64, pi: fn(f64) -> f64, proposal: Normal<f64>, rng: &mut R) -> f64 {
+fn next<R: Rng, D: Distribution<f64>>(x: f64, pi: fn(f64) -> f64, proposal: &D, rng: &mut R) -> f64 {
     let candidate = x + proposal.sample(rng);
 
     let alpha = (pi(candidate) / pi(x)).min(1.0);
@@ -19,7 +15,7 @@ fn next<R: Rng>(x: f64, pi: fn(f64) -> f64, proposal: Normal<f64>, rng: &mut R) 
 }
 
 
-pub fn metropolis<R: Rng, F: Float>(pi: fn(F) -> F, proposal: Normal<f64>, rng: &mut R) -> Vec<f64> {
+pub fn metropolis<R: Rng, D: Distribution<f64>>(pi: fn(f64) -> f64, proposal: &D, rng: &mut R) -> Vec<f64> {
     let local_next = |x: f64, rng: &mut R| { next(x, pi, proposal, rng) };
 
     // Execute warmup

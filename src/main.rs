@@ -1,6 +1,3 @@
-use num;
-use num::Float;
-
 use ::rand_distr::Normal;
 use std::error::Error;
 
@@ -16,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // exp( -x ^ 2 ) is the distribution propertion
     let pi = |x: f64| -> f64 { (-x.powi(2)).exp() };
 
-    let result = metropolis(pi, proposal, &mut rng);
+    let result = metropolis(pi, &proposal, &mut rng);
 
     output::write_vec_to_csv(result)
 }
