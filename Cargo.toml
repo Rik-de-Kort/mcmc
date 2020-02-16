@@ -5,8 +5,7 @@ authors = ["Rik de Kort <rik.de.kort@pggm.nl>"]
 edition = "2018"
 
 [dependencies]
+num = "*"
 rand = "0.7.3"
 rand_distr = "*"
-ndarray = "*"
-ndarray-rand = "*"
 csv = "*"

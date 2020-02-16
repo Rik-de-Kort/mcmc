@@ -1,3 +1,6 @@
+use num;
+use num::Float;
+
 use ::rand_distr::Normal;
 use std::error::Error;
 
