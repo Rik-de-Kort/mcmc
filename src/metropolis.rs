@@ -40,3 +40,29 @@ pub fn metropolis<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(pi: fn(F) 
     return result;
 }
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ::rand_distr::Normal;
+
+    #[test]
+    fn test_trivial() {
+        assert_eq!(1.0, 1.0);
+    }
+
+    #[test]
+    fn test_standard_normal() {
+        // We define a standard normal distribution and check if
+        // parameter estimates are accurate.
+        let mut rng = rand::thread_rng();
+        let proposal = Normal::new(0.0, 1.0).unwrap();
+        let pi = |x: f64| -> f64 { (-x.powi(2)).exp() };
+        let result = metropolis(pi, &proposal, &mut rng);
+        let mean: f64 = result.iter().sum() / result.len();
+        
+        assert!(mean.abs() < 0.01);
+    }
+}
+
+
