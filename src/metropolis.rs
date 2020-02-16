@@ -51,10 +51,17 @@ mod tests {
         assert_eq!(1.0, 1.0);
     }
 
-    use std::ops::Div;
-    use std::iter;
-    fn mean<T: Div + iter::Sum<&T>>(v: Vec<T>) -> T{
-        v.iter().sum::<T>() / (v.len() as T)
+    use std::iter::Sum;
+    use num::ToPrimitive;
+
+    fn mean<'a, T: 'a>(v: &'a [T]) -> Option<f64>
+    where
+        T: ToPrimitive + Sum<&'a T>
+    {
+        let sum = T::to_f64(&v.iter().sum::<T>())?;
+        let n = f64::from_usize(v.len())?;
+
+        Some(sum / n)
     }
 
     #[test]
@@ -66,7 +73,7 @@ mod tests {
         let pi = |x: f64| -> f64 { (-x.powi(2)).exp() };
         let result = metropolis(pi, &proposal, &mut rng);
         
-        assert!(mean(result) < 0.01);
+        assert!(mean(&result).unwrap() < 0.01);
     }
 }
 
