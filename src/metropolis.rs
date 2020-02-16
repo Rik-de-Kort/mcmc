@@ -1,12 +1,15 @@
+use num;
+use num::{Float, FromPrimitive};
+
 use rand::Rng;
 use rand::distributions::{Distribution};
 
 
-fn next<R: Rng, D: Distribution<f64>>(x: f64, pi: fn(f64) -> f64, proposal: &D, rng: &mut R) -> f64 {
+fn next<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(x: F, pi: fn(F) -> F, proposal: &D, rng: &mut R) -> F {
     let candidate = x + proposal.sample(rng);
 
-    let alpha = (pi(candidate) / pi(x)).min(1.0);
-    let u: f64 = rng.gen();  // Draws uniform [0, 1)
+    let alpha = (pi(candidate) / pi(x)).min(F::one());
+    let u = F::from_f64(rng.gen()).unwrap();  // Draws uniform [0, 1)
     if u <= alpha {
         return candidate;
     } else {
@@ -15,12 +18,12 @@ fn next<R: Rng, D: Distribution<f64>>(x: f64, pi: fn(f64) -> f64, proposal: &D, 
 }
 
 
-pub fn metropolis<R: Rng, D: Distribution<f64>>(pi: fn(f64) -> f64, proposal: &D, rng: &mut R) -> Vec<f64> {
-    let local_next = |x: f64, rng: &mut R| { next(x, pi, proposal, rng) };
+pub fn metropolis<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(pi: fn(F) -> F, proposal: &D, rng: &mut R) -> Vec<F> {
+    let local_next = |x: F, rng: &mut R| { next(x, pi, proposal, rng) };
 
     // Execute warmup
     let n_warmup = 1e5 as usize;
-    let mut x = 10.0;
+    let mut x = F::from_u32(10).unwrap();
     for _ in 1..n_warmup{
         x = local_next(x, rng);
     }
