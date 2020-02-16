@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // We are looking for a standard normal distribution
     // exp( -x ^ 2 ) is the distribution propertion
-    let pi = |x: f64| -> f64 { (-x.powi(2)).exp() };
+    let pi = |x: f32| -> f32 { (-x.powi(2)).exp() };
 
     let result = metropolis(pi, &proposal, &mut rng);
 
