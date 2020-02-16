@@ -8,23 +8,6 @@ use std::error::Error;
 use mcmc::output;
 
 
-// mod output {
-//     use std::error::Error;
-//     use csv::Writer;
-// 
-//     pub fn write_vec_to_csv(result: Vec<f64>) -> Result<(), Box<dyn Error>> {
-//         let mut wtr = Box::new(Writer::from_path("data.csv")?);
-//         wtr.write_record(&["index", "val"])?;
-// 
-//         for i in 0..result.len()-1 {
-//             wtr.write_record(&[i.to_string(), result[i].to_string()])?;
-//         }
-//         wtr.flush()?;
-//         Ok(())
-//     }
-// }
-
-
 fn next<R: Rng>(x: f64, pi: fn(f64) -> f64, proposal: Normal<f64>, mut rng: R) -> f64 {
     let candidate = x + proposal.sample(&mut rng);
 
@@ -37,8 +20,8 @@ fn next<R: Rng>(x: f64, pi: fn(f64) -> f64, proposal: Normal<f64>, mut rng: R) -
     }
 }
 
-fn metropolis(pi: fn(f64) -> f64, proposal: Normal<f64>) -> Vec<f64> {
-    let rng = rand::thread_rng();
+fn metropolis<R: Rng>(pi: fn(f64) -> f64, proposal: Normal<f64>, mut rng: R) -> Vec<f64> {
+    // let rng = rand::thread_rng();
     let local_next = |x: f64| { next(x, pi, proposal, rng) };
 
     // Execute warmup
@@ -63,13 +46,14 @@ fn metropolis(pi: fn(f64) -> f64, proposal: Normal<f64>) -> Vec<f64> {
 
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let mut rng = rand::thread_rng();
     let proposal = Normal::new(0.0, 1.0).unwrap();
 
     // We are looking for a standard normal distribution
     // exp( -x ^ 2 ) is the distribution propertion
     let pi = |x: f64| -> f64 { (-x.powi(2)).exp() };
 
-    let result = metropolis(pi, proposal);
+    let result = metropolis(pi, proposal, rng);
 
     output::write_vec_to_csv(result)
 }
