@@ -51,6 +51,12 @@ mod tests {
         assert_eq!(1.0, 1.0);
     }
 
+    use std::ops::Div;
+    use std::iter;
+    fn mean<T: Div + iter::Sum<&T>>(v: Vec<T>) -> T{
+        v.iter().sum::<T>() / (v.len() as T)
+    }
+
     #[test]
     fn test_standard_normal() {
         // We define a standard normal distribution and check if
@@ -59,9 +65,8 @@ mod tests {
         let proposal = Normal::new(0.0, 1.0).unwrap();
         let pi = |x: f64| -> f64 { (-x.powi(2)).exp() };
         let result = metropolis(pi, &proposal, &mut rng);
-        let mean: f64 = result.iter().sum() / result.len();
         
-        assert!(mean.abs() < 0.01);
+        assert!(mean(result) < 0.01);
     }
 }
 
