@@ -52,14 +52,15 @@ mod tests {
     }
 
     use std::iter::Sum;
+    use std::ops::Div;
     use num::ToPrimitive;
 
-    fn mean<'a, T: 'a>(v: &'a [T]) -> Option<f64>
+    fn mean<'a, T: 'a>(v: &'a [T]) -> Option<T>
     where
-        T: ToPrimitive + Sum<&'a T>
+        T: ToPrimitive + FromPrimitive + Sum<&'a T> + Div
     {
-        let sum = T::to_f64(&v.iter().sum::<T>())?;
-        let n = f64::from_usize(v.len())?;
+        let sum = v.iter().sum::<T>();
+        let n = T::from_usize(v.len())?;
 
         Some(sum / n)
     }
