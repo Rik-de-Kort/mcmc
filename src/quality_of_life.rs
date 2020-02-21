@@ -6,6 +6,23 @@ pub fn min<T: PartialOrd>(x: T, y: T) -> T {
 use num::Float;
 pub fn exp<T: Float>(x: T) -> T { x.exp() }
 
+pub fn partial_min<T: PartialOrd+Copy>(v: &Vec<T>) -> T {
+    let mut x = v[0];
+    for i in 1..v.len() {
+        if v[i] < x { x = v[i]; }
+    }
+    x
+}
+
+/// "Max" function for partial orders. 
+pub fn partial_max<T: PartialOrd+Copy>(v: &Vec<T>) -> T {
+    let mut x = v[0];
+    for i in 1..v.len() {
+        if v[i] > x { x = v[i]; }
+    }
+    x
+}
+
 pub fn mean(v: &[f64]) -> f64 {
     let sum = v.iter().sum::<f64>();
     let n = v.len() as f64;
