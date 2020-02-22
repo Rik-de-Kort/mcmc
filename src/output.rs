@@ -1,4 +1,3 @@
-use num::Float;
 use std::string::ToString;
 
 use std::error::Error;
@@ -7,7 +6,7 @@ use csv::Writer;
 use crate::quality_of_life::*;
 
 
-pub fn write_vec_to_csv<F: ToString>(index: Vec<F>, vals: Vec<F>) -> Result<(), Box<dyn Error>> {
+pub fn write_vec_to_csv<S: ToString, T: ToString>(index: Vec<S>, vals: Vec<T>) -> Result<(), Box<dyn Error>> {
     let mut wtr = Box::new(Writer::from_path("data.csv")?);
     wtr.write_record(&["index", "val"])?;
 
@@ -23,9 +22,7 @@ pub fn get_hist(data: Vec<f32>, n_buckets: usize) -> (Vec<f32>, Vec<usize>) {
     let min = partial_min(&data);
     let max = partial_max(&data);
 
-
     let bucket_size = (max - min) / n_buckets as f32;
-    println!("{} {} {} {}", min, max, n_buckets, bucket_size);
 
     if bucket_size == 0.0 {
         return (vec![min], vec![data.len()])
