@@ -13,11 +13,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // We are looking for a standard normal distribution
     // exp( -x ^ 2 ) is the distribution propertion
     let pi = |x: f32| -> f32 { exp(-x.powi(2)) };
+    // let pi = |x: f32| -> f32 { exp(-(55.0 *(x - 2.0)).powi(2)) };
 
     let result = metropolis(pi, &proposal, &mut rng);
 
-    let hist = output::get_hist(result, 500);
-    output::write_vec_to_csv(hist)
+    let (bins, hist) = output::get_hist(result, 500);
+
+    output::write_vec_to_csv(bins, hist)
 }
 
 

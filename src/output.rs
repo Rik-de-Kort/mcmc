@@ -7,33 +7,46 @@ use csv::Writer;
 use crate::quality_of_life::*;
 
 
-pub fn write_vec_to_csv<F: Float+ToString>(result: Vec<F>) -> Result<(), Box<dyn Error>> {
+pub fn write_vec_to_csv<F: ToString>(index: Vec<F>, vals: Vec<F>) -> Result<(), Box<dyn Error>> {
     let mut wtr = Box::new(Writer::from_path("data.csv")?);
     wtr.write_record(&["index", "val"])?;
 
-    for i in 0..result.len()-1 {
-        wtr.write_record(&[i.to_string(), result[i].to_string()])?;
+    for (idx, val) in index.iter().zip(vals.iter()) {
+        wtr.write_record(&[idx.to_string(), val.to_string()])?;
     }
     wtr.flush()?;
     Ok(())
 }
 
-pub fn get_hist(data: Vec<f32>, n_buckets: usize) -> Vec<f32> {
+
+pub fn get_hist(data: Vec<f32>, n_buckets: usize) -> (Vec<f32>, Vec<usize>) {
     let min = partial_min(&data);
     let max = partial_max(&data);
+
+
     let bucket_size = (max - min) / n_buckets as f32;
+    println!("{} {} {} {}", min, max, n_buckets, bucket_size);
+
+    if bucket_size == 0.0 {
+        return (vec![min], vec![data.len()])
+    }
     
-    // let mut histogram = Vec::with_capacity(n_buckets);
-    let mut histogram = vec![0.0; n_buckets];
+    let mut histogram = vec![0; n_buckets];
 
     for x in data.iter() {
         // min + i*bucket size <= x < min + (i+1) * bucket_size
         // therefore i <= (x - min) / bucket_size
+        // In case x = max, the bucket index will be n+1
+        // Put it in bucket n instead.
         let i = ((x - min) / bucket_size).floor() as usize;
+        let i = if i == n_buckets { n_buckets - 1 } else { i };
 
-        // In case x = max, put in highest bucket.
-        let i = if i == 500 { 500 - 1 } else { i };
-        histogram[i] = histogram[i] + 1.0;
+        histogram[i] = histogram[i] + 1;
     }
-    histogram
+
+    let bins: Vec<f32> = (0..n_buckets).into_iter().map( |i| {
+        min + (i as f32 + 0.5)*bucket_size 
+    }).collect();
+
+    (bins, histogram)
 }
