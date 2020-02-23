@@ -1,10 +1,5 @@
-use num;
-use num::Float;
-
 use std::ops::Add;
-
 use ndarray_rand::rand::Rng;
-
 use crate::quality_of_life::*;
 
 
@@ -26,16 +21,16 @@ where
 }
 
 
-pub fn metropolis<T, R>(pi: fn(&T) -> f64, proposal: &impl Fn(&mut R) -> T, rng: &mut R) -> Vec<T>
+pub fn metropolis<T, R>(initial: T, pi: fn(&T) -> f64, proposal: &impl Fn(&mut R) -> T, rng: &mut R) -> Vec<T>
 where
-    T: Float,
+    T: Add<Output = T> + Copy,
     R: Rng,
 {
     let local_next = |x: T, rng: &mut R| next(x, pi, proposal, rng);
 
     // Execute warmup
     let n_warmup = 1e5 as usize;
-    let mut x = T::zero();  // Todo: get good initial guess
+    let mut x = initial; 
     for _ in 1..n_warmup {
         x = local_next(x, rng);
     }
