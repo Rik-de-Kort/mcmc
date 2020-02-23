@@ -9,3 +9,5 @@ num = "*"
 csv = "*"
 ndarray = "*"
 ndarray-rand = "*"
+ndarray-csv = "*"
+serde = { version = "1.0", features = ["derive"]}

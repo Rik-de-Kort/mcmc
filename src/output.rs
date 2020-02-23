@@ -1,22 +1,21 @@
-use std::string::ToString;
+extern crate ndarray;
+extern crate ndarray_csv;
+
+use serde::ser::Serialize;
 
 use std::error::Error;
 use csv::Writer;
 
 use crate::quality_of_life::*;
 
-
-pub fn write_vec_to_csv<S: ToString, T: ToString>(index: Vec<S>, vals: Vec<T>) -> Result<(), Box<dyn Error>> {
-    let mut wtr = Box::new(Writer::from_path("data.csv")?);
-    wtr.write_record(&["index", "val"])?;
-
-    for (idx, val) in index.iter().zip(vals.iter()) {
-        wtr.write_record(&[idx.to_string(), val.to_string()])?;
+pub fn write_vec_to_csv<T: Serialize>(vals: Vec<T>) -> Result<(), Box<dyn Error>> {
+    let mut wtr = Writer::from_path("data.csv")?;
+    for val in vals.iter() {
+        wtr.serialize(val)?;
     }
     wtr.flush()?;
     Ok(())
 }
-
 
 pub fn get_hist(data: Vec<f64>, n_buckets: usize) -> (Vec<f64>, Vec<usize>) {
     let min = partial_min(&data);
