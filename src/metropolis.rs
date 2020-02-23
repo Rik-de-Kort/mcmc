@@ -1,36 +1,58 @@
-use std::ops::Add;
-use ndarray_rand::rand::Rng;
 use crate::quality_of_life::*;
+use ndarray_rand::rand::Rng;
+use std::ops::Add;
 
-
-fn next<T, R>(x: T, pi: fn(&T) -> f64, proposal: &impl Fn(&mut R) -> T, rng: &mut R) -> T
-where
-    T: Add<Output = T> + Copy,
-    R: Rng,
-{
-    let candidate = x + proposal(rng);
-
-    let alpha = min(1.0, pi(&candidate) / pi(&x));
-    let u: f64 = rng.gen();
-
-    if u <= alpha {
-        candidate
-    } else {
-        x
-    }
+pub trait ProposalDistribution<T> {
+    // Sample conditional on x
+    fn sample<R: Rng>(&self, x: &T, rng: &mut R) -> T;
+    // Conditional density function, p(x | y)
+    fn pdf(&self, x: &T, y: &T) -> f64;
 }
 
+/// Draws the next item in a Markov chain using the Metropolis-Hastings algorithm
+/// In case the proposal distribution's density function satisfies p(x, c) == p(c, x),
+/// this yields the Metropolis algorithm.
+///
+/// Arguments:
+///
+/// * `x`: current item in the Markov chain
+/// * `pi`: non-normalized density of the distribution to approximate
+/// * `proposal`: conditional sampler to draw new proposals from. We need access to the underlying
+/// density to calculate the correcting ratio for MH.
+/// * `rng`: random seed used for this thread.
+fn metropolis_hastings_next<T, R>(
+    x: T,
+    pi: fn(&T) -> f64,
+    pd: &impl ProposalDistribution<T>,
+    rng: &mut R,
+) -> T
+where
+    T: Copy,
+    R: Rng,
+{
+    let c = pd.sample(&x, rng);
 
-pub fn metropolis<T, R>(initial: T, pi: fn(&T) -> f64, proposal: &impl Fn(&mut R) -> T, rng: &mut R) -> Vec<T>
+    let alpha = pi(&c) / pi(&x) * pd.pdf(&x, &c) / pd.pdf(&c, &x);
+    let u: f64 = rng.gen();
+
+    if u <= alpha { c } else { x }
+}
+
+pub fn metropolis<T, R>(
+    initial: T,
+    pi: fn(&T) -> f64,
+    proposal: impl ProposalDistribution<T>,
+    rng: &mut R,
+) -> Vec<T>
 where
     T: Add<Output = T> + Copy,
     R: Rng,
 {
-    let local_next = |x: T, rng: &mut R| next(x, pi, proposal, rng);
+    let local_next = |x: T, rng: &mut R| metropolis_hastings_next(x, pi, &proposal, rng);
 
     // Execute warmup
     let n_warmup = 1e5 as usize;
-    let mut x = initial; 
+    let mut x = initial;
     for _ in 1..n_warmup {
         x = local_next(x, rng);
     }

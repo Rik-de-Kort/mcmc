@@ -6,6 +6,7 @@ use ndarray_rand::rand::distributions::Distribution;
 use std::error::Error;
 
 use mcmc::metropolis::metropolis;
+use mcmc::metropolis::ProposalDistribution;
 use mcmc::output;
 use mcmc::quality_of_life::*;
 
@@ -25,20 +26,33 @@ impl Add for P {
 }
 
 
+struct Proposal {
+    norm: Normal<f64>
+}
 
-fn gaussian_2d(p: &P) -> f64 {
+impl ProposalDistribution<P> for Proposal {
+    fn sample<R: Rng>(&self, p: &P, rng: &mut R) -> P {
+        P{
+            x: p.x + self.norm.sample(rng),
+            y: p.y + self.norm.sample(rng)
+        }
+    }
+
+    fn pdf(&self, p: &P, q: &P) -> f64 { exp(-p.x.powi(2)) * exp(-p.y.powi(2)) }
+}
+
+
+fn pi(p: &P) -> f64 {
     exp(-p.x.powi(2)) * exp(-p.y.powi(2))
 }
 
-fn sampler(rng: &mut impl Rng) -> P {
-    let dist = Normal::new(0.0, 1.0).unwrap();
-    P{x: dist.sample(rng), y: dist.sample(rng)}
-}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = ndarray_rand::rand::thread_rng();
+
+    let prop = Proposal{norm: Normal::new(0.0, 1.0).unwrap()};
     let initial = P{x: 0.0, y: 0.0};
-    let result = metropolis(initial, gaussian_2d, &sampler, &mut rng);
+    let result = metropolis(initial, pi, prop, &mut rng);
 
     // let (bins, hist) = output::get_hist(result, 500);
     // output::write_vec_to_csv(bins, hist)
