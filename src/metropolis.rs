@@ -1,6 +1,4 @@
-use crate::quality_of_life::*;
 use ndarray_rand::rand::Rng;
-use std::ops::Add;
 
 pub trait ProposalDistribution<T> {
     // Sample conditional on x
@@ -20,15 +18,12 @@ pub trait ProposalDistribution<T> {
 /// * `proposal`: conditional sampler to draw new proposals from. We need access to the underlying
 /// density to calculate the correcting ratio for MH.
 /// * `rng`: random seed used for this thread.
-fn metropolis_hastings_next<T, R>(
+fn metropolis_hastings_next<T, R: Rng>(
     x: T,
     pi: fn(&T) -> f64,
     pd: &impl ProposalDistribution<T>,
     rng: &mut R,
 ) -> T
-where
-    T: Copy,
-    R: Rng,
 {
     let c = pd.sample(&x, rng);
 
@@ -38,15 +33,12 @@ where
     if u <= alpha { c } else { x }
 }
 
-pub fn metropolis<T, R>(
+pub fn metropolis<T: Copy, R: Rng>(
     initial: T,
     pi: fn(&T) -> f64,
     proposal: impl ProposalDistribution<T>,
     rng: &mut R,
 ) -> Vec<T>
-where
-    T: Add<Output = T> + Copy,
-    R: Rng,
 {
     let local_next = |x: T, rng: &mut R| metropolis_hastings_next(x, pi, &proposal, rng);
 

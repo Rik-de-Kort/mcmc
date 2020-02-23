@@ -5,8 +5,7 @@ use ndarray_rand::rand::distributions::Distribution;
 
 use std::error::Error;
 
-use mcmc::metropolis::metropolis;
-use mcmc::metropolis::ProposalDistribution;
+use mcmc::metropolis::{metropolis, ProposalDistribution};
 use mcmc::output;
 use mcmc::quality_of_life::*;
 
@@ -14,6 +13,7 @@ use std::ops::Add;
 use serde::Serialize;
 
 
+// Sort of addable array type
 #[derive(Copy, Clone, Debug)]
 #[derive(Serialize)]
 struct P { x: f64, y: f64 }
@@ -25,7 +25,7 @@ impl Add for P {
     }
 }
 
-
+// Defining the proposal distribution
 struct Proposal {
     norm: Normal<f64>
 }
@@ -38,7 +38,7 @@ impl ProposalDistribution<P> for Proposal {
         }
     }
 
-    fn pdf(&self, p: &P, q: &P) -> f64 { exp(-p.x.powi(2)) * exp(-p.y.powi(2)) }
+    fn pdf(&self, p: &P, _q: &P) -> f64 { exp(-p.x.powi(2)) * exp(-p.y.powi(2)) }
 }
 
 
@@ -54,8 +54,5 @@ fn main() -> Result<(), Box<dyn Error>> {
     let initial = P{x: 0.0, y: 0.0};
     let result = metropolis(initial, pi, prop, &mut rng);
 
-    // let (bins, hist) = output::get_hist(result, 500);
-    // output::write_vec_to_csv(bins, hist)
-    // output::write_vec_to_csv((0..result.len()).collect(), result)
     output::write_vec_to_csv(result)
 }
