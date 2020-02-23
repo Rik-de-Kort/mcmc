@@ -18,11 +18,11 @@ pub fn write_vec_to_csv<S: ToString, T: ToString>(index: Vec<S>, vals: Vec<T>) -
 }
 
 
-pub fn get_hist(data: Vec<f32>, n_buckets: usize) -> (Vec<f32>, Vec<usize>) {
+pub fn get_hist(data: Vec<f64>, n_buckets: usize) -> (Vec<f64>, Vec<usize>) {
     let min = partial_min(&data);
     let max = partial_max(&data);
 
-    let bucket_size = (max - min) / n_buckets as f32;
+    let bucket_size = (max - min) / n_buckets as f64;
 
     if bucket_size == 0.0 {
         return (vec![min], vec![data.len()])
@@ -41,8 +41,8 @@ pub fn get_hist(data: Vec<f32>, n_buckets: usize) -> (Vec<f32>, Vec<usize>) {
         histogram[i] = histogram[i] + 1;
     }
 
-    let bins: Vec<f32> = (0..n_buckets).into_iter().map( |i| {
-        min + (i as f32 + 0.5)*bucket_size 
+    let bins: Vec<f64> = (0..n_buckets).into_iter().map( |i| {
+        min + (i as f64 + 0.5)*bucket_size 
     }).collect();
 
     (bins, histogram)

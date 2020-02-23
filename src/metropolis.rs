@@ -1,59 +1,67 @@
 use num;
-use num::{Float, FromPrimitive};
+use num::Float;
 
-use rand::Rng;
-use rand::distributions::{Distribution};
+use std::ops::Add;
+
+use ndarray_rand::rand::Rng;
 
 use crate::quality_of_life::*;
 
-fn next<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(x: F, pi: fn(F) -> F, proposal: &D, rng: &mut R) -> F {
-    let candidate = x + proposal.sample(rng);
 
-    let alpha = min(F::one(), pi(candidate) / pi(x));
-    let u = F::from_f64(rng.gen()).unwrap();  // Draws uniform [0, 1)
+fn next<T, R>(x: T, pi: fn(&T) -> f64, proposal: &impl Fn(&mut R) -> T, rng: &mut R) -> T
+where
+    T: Add<Output = T> + Copy,
+    R: Rng,
+{
+    let candidate = x + proposal(rng);
+
+    let alpha = min(1.0, pi(&candidate) / pi(&x));
+    let u: f64 = rng.gen();
+
     if u <= alpha {
-        return candidate;
+        candidate
     } else {
-        return x;
+        x
     }
 }
 
-pub fn metropolis<R: Rng, F: Float+FromPrimitive, D: Distribution<F>>(pi: fn(F) -> F, proposal: &D, rng: &mut R) -> Vec<F> {
-    let local_next = |x: F, rng: &mut R| { next(x, pi, proposal, rng) };
+
+pub fn metropolis<T, R>(pi: fn(&T) -> f64, proposal: &impl Fn(&mut R) -> T, rng: &mut R) -> Vec<T>
+where
+    T: Float,
+    R: Rng,
+{
+    let local_next = |x: T, rng: &mut R| next(x, pi, proposal, rng);
 
     // Execute warmup
     let n_warmup = 1e5 as usize;
-    let mut x = F::from_u32(10).unwrap();
-    for _ in 1..n_warmup{
+    let mut x = T::zero();  // Todo: get good initial guess
+    for _ in 1..n_warmup {
         x = local_next(x, rng);
     }
 
     // Start running the simulation
     let n = 1e6 as usize;
-    let mut result = Vec::with_capacity(n); 
+    let mut result = Vec::with_capacity(n);
     result.push(x);
 
     for i in 1..n {
-        let next_val = local_next(result[i-1], rng);
+        let next_val = local_next(result[i - 1], rng);
         result.push(next_val);
     }
     return result;
 }
 
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    use ::rand_distr::Normal;
+    use rand_distr::Normal;
 
     #[test]
     fn test_trivial() {
         assert_eq!(1.0, 1.0);
     }
-
 
     #[test]
     fn test_standard_normal() {
@@ -63,10 +71,8 @@ mod tests {
         let proposal = Normal::new(0.0, 1.0).unwrap();
         let pi = |x: f64| -> f64 { exp(-x.powi(2)) };
         let result = metropolis(pi, &proposal, &mut rng);
-        
+
         assert!(mean(&result).abs() < 0.005);
         assert!(std(&result) <= 1.1)
     }
 }
-
-

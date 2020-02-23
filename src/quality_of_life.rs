@@ -37,3 +37,9 @@ pub fn std(v: &[f64]) -> f64{
 }
 
 
+use ndarray_rand::rand::Rng;
+use ndarray_rand::rand_distr::Distribution;
+pub fn build_sampler<T, D: Distribution<T>, R: Rng> (d: D) -> impl Fn(&mut R) -> T {
+    // Force ownership of d over to the closure
+    move |rng: &mut R| { d.sample(rng) }
+}
