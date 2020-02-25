@@ -23,14 +23,17 @@ fn metropolis_hastings_next<T, R: Rng>(
     pi: fn(&T) -> f64,
     pd: &impl ProposalDistribution<T>,
     rng: &mut R,
-) -> T
-{
+) -> T {
     let c = pd.sample(&x, rng);
 
     let alpha = pi(&c) / pi(&x) * pd.pdf(&x, &c) / pd.pdf(&c, &x);
     let u: f64 = rng.gen();
 
-    if u <= alpha { c } else { x }
+    if u <= alpha {
+        c
+    } else {
+        x
+    }
 }
 
 pub fn metropolis<T: Copy, R: Rng>(
@@ -38,8 +41,7 @@ pub fn metropolis<T: Copy, R: Rng>(
     pi: fn(&T) -> f64,
     proposal: impl ProposalDistribution<T>,
     rng: &mut R,
-) -> Vec<T>
-{
+) -> Vec<T> {
     let local_next = |x: T, rng: &mut R| metropolis_hastings_next(x, pi, &proposal, rng);
 
     // Execute warmup

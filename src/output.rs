@@ -1,10 +1,7 @@
-extern crate ndarray;
-extern crate ndarray_csv;
-
 use serde::ser::Serialize;
 
-use std::error::Error;
 use csv::Writer;
+use std::error::Error;
 
 use crate::quality_of_life::*;
 
@@ -24,9 +21,9 @@ pub fn get_hist(data: Vec<f64>, n_buckets: usize) -> (Vec<f64>, Vec<usize>) {
     let bucket_size = (max - min) / n_buckets as f64;
 
     if bucket_size == 0.0 {
-        return (vec![min], vec![data.len()])
+        return (vec![min], vec![data.len()]);
     }
-    
+
     let mut histogram = vec![0; n_buckets];
 
     for x in data.iter() {
@@ -40,9 +37,10 @@ pub fn get_hist(data: Vec<f64>, n_buckets: usize) -> (Vec<f64>, Vec<usize>) {
         histogram[i] = histogram[i] + 1;
     }
 
-    let bins: Vec<f64> = (0..n_buckets).into_iter().map( |i| {
-        min + (i as f64 + 0.5)*bucket_size 
-    }).collect();
+    let bins: Vec<f64> = (0..n_buckets)
+        .into_iter()
+        .map(|i| min + (i as f64 + 0.5) * bucket_size)
+        .collect();
 
     (bins, histogram)
 }
