@@ -2,20 +2,20 @@ use ndarray_rand::rand::Rng;
 
 /// Proposal distribution for Gibbs sampling
 /// We use the option type to indicate absence of values
-pub trait ProposalDistribution {
+pub trait ProposalDistribution<T> {
     // Sample remaining values conditional on x
-    fn sample<R: Rng>(&self, x: &Vec<Option<f64>>, rng: &mut R) -> Vec<f64>;
+    fn sample<R: Rng>(&self, x: &Vec<Option<T>>, rng: &mut R) -> Vec<T>;
     // Conditional density function, p(x | y)
     // Possible fall through if x and y are not complimentary
     // Todo: figure out some way to have an assert in here
-    fn pdf(&self, x: &Vec<f64>) -> f64;
+    fn pdf(&self, x: &Vec<T>) -> T;
 }
 
-fn vec_to_option(x: &Vec<f64>) -> Vec<Option<f64>> {
+fn vec_to_option<T: Clone>(x: &Vec<T>) -> Vec<Option<T>> {
     x.iter().map(|item| Some(item.clone())).collect()
 }
 
-fn option_to_vec(x: Vec<Option<f64>>) -> Vec<f64> {
+fn option_to_vec<T: Clone>(x: Vec<Option<T>>) -> Vec<T> {
     x.iter().map(|item| {
         match item {
             Some(u) => u.clone(),
@@ -35,13 +35,13 @@ fn option_to_vec(x: Vec<Option<f64>>) -> Vec<f64> {
 /// * `proposal`: conditional sampler to draw new proposals from. We need access to the underlying
 /// density to calculate the correcting ratio for MH.
 /// * `rng`: random seed used for this thread.
-fn gibbs_next<R: Rng>(
-    x: Vec<f64>,
-    pd: &impl ProposalDistribution,
+fn gibbs_next<T: Clone, R: Rng>(
+    x: Vec<T>,
+    pd: &impl ProposalDistribution<T>,
     rng: &mut R,
-) -> Vec<f64>
+) -> Vec<T>
 {
-    let mut result: Vec<Option<f64>> = vec_to_option(&x);
+    let mut result: Vec<Option<T>> = vec_to_option(&x);
     for i in 0..result.len() {
         result[i] = None;
         result = vec_to_option(&pd.sample(&result, rng));
@@ -49,11 +49,11 @@ fn gibbs_next<R: Rng>(
     option_to_vec(result)
 }
 
-pub fn gibbs<R: Rng>(
-    initial: Vec<f64>,
-    proposal: impl ProposalDistribution,
+pub fn gibbs<T: Clone, R: Rng>(
+    initial: Vec<T>,
+    proposal: impl ProposalDistribution<T>,
     rng: &mut R,
-) -> Vec<Vec<f64>>
+) -> Vec<Vec<T>>
 {
     let local_next = |x, rng: &mut R| gibbs_next(x, &proposal, rng);
 

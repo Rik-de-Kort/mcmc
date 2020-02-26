@@ -14,7 +14,7 @@ struct Proposal {
     norm: Normal<f64>,
 }
 
-impl ProposalDistribution for Proposal {
+impl ProposalDistribution<f64> for Proposal {
     fn sample<R: Rng>(&self, p: &Vec<Option<f64>>, rng: &mut R) -> Vec<f64> {
         assert!(p.len() == 2); // Panic if not 2d
 
