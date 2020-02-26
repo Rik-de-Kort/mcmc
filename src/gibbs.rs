@@ -8,7 +8,7 @@ pub trait ProposalDistribution {
     // Conditional density function, p(x | y)
     // Possible fall through if x and y are not complimentary
     // Todo: figure out some way to have an assert in here
-    fn pdf(&self, x: &Vec<Option<f64>>, y: &Vec<Option<f64>>) -> f64;
+    fn pdf(&self, x: &Vec<f64>) -> f64;
 }
 
 

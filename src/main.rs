@@ -21,7 +21,7 @@ impl ProposalDistribution for Proposal {
         p.iter().map( | item | {
             match item {
                 None => self.norm.sample(rng),
-                Some(x) => x
+                Some(x) => *x
             }
         }).collect()
 
@@ -31,12 +31,12 @@ impl ProposalDistribution for Proposal {
      //    }
     }
 
-    fn pdf(&self, p: &Vec<f64>, _q: &Vec<f64>) -> f64 {
+    fn pdf(&self, p: &Vec<f64>) -> f64 {
         exp(-p[0].powi(2)) * exp(-p[0].powi(2))
     }
 }
 
-fn pi(p: Vec<f64>) -> f64 {
+fn pi(p: &Vec<f64>) -> f64 {
     exp(-p[0].powi(2)) * exp(-p[1].powi(2))
 }
 
