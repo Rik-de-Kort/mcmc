@@ -4,11 +4,11 @@ use ndarray_rand::rand::Rng;
 /// We use the option type to indicate absence of values
 pub trait ProposalDistribution<T> {
     // Sample remaining values conditional on x
-    fn sample<R: Rng>(&self, x: &Vec<Option<T>>, rng: &mut R) -> Vec<T>;
+    fn sample<R: Rng>(&self, x: &[Option<T>], rng: &mut R) -> Vec<T>;
     // Conditional density function, p(x | y)
     // Possible fall through if x and y are not complimentary
     // Todo: figure out some way to have an assert in here
-    fn pdf(&self, x: &Vec<T>) -> T;
+    fn pdf(&self, x: &[T]) -> T;
 }
 
 fn vec_to_option<T: Clone>(x: &[T]) -> Vec<Option<T>> {

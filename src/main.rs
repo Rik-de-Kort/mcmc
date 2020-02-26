@@ -15,7 +15,7 @@ struct Proposal {
 }
 
 impl ProposalDistribution<f64> for Proposal {
-    fn sample<R: Rng>(&self, p: &Vec<Option<f64>>, rng: &mut R) -> Vec<f64> {
+    fn sample<R: Rng>(&self, p: &[Option<f64>], rng: &mut R) -> Vec<f64> {
         assert!(p.len() == 2); // Panic if not 2d
 
         p.iter().map( | item | {
@@ -23,10 +23,9 @@ impl ProposalDistribution<f64> for Proposal {
                 None => self.norm.sample(rng),
                 Some(x) => *x
             }
-        }).collect()
-    }
+        }).collect() }
 
-    fn pdf(&self, p: &Vec<f64>) -> f64 {
+    fn pdf(&self, p: &[f64]) -> f64 {
         exp(-p[0].powi(2)) * exp(-p[0].powi(2))
     }
 }

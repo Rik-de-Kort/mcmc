@@ -12,22 +12,22 @@ pub fn exp<T: Float>(x: T) -> T {
     x.exp()
 }
 
-pub fn partial_min<T: PartialOrd + Copy>(v: &Vec<T>) -> T {
+pub fn partial_min<T: PartialOrd + Copy>(v: &[T]) -> T {
     let mut x = v[0];
-    for i in 1..v.len() {
-        if v[i] < x {
-            x = v[i];
+    for item in v.iter().skip(1) {
+        if *item < x {
+            x = *item;
         }
     }
     x
 }
 
 /// "Max" function for partial orders.
-pub fn partial_max<T: PartialOrd + Copy>(v: &Vec<T>) -> T {
+pub fn partial_max<T: PartialOrd + Copy>(v: &[T]) -> T {
     let mut x = v[0];
-    for i in 1..v.len() {
-        if v[i] > x {
-            x = v[i];
+    for item in v.iter().skip(1) {
+        if *item > x {
+            x = *item;
         }
     }
     x
@@ -42,7 +42,7 @@ pub fn mean(v: &[f64]) -> f64 {
 pub fn std(v: &[f64]) -> f64 {
     let mean = mean(&v);
     let diffs = v.iter().map(|x| (x - mean).powi(2));
-    let sum = diffs.into_iter().sum::<f64>();
+    let sum = diffs.sum::<f64>();
     sum / v.len() as f64
 }
 
