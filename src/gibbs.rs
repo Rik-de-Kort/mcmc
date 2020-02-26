@@ -11,11 +11,11 @@ pub trait ProposalDistribution<T> {
     fn pdf(&self, x: &Vec<T>) -> T;
 }
 
-fn vec_to_option<T: Clone>(x: &Vec<T>) -> Vec<Option<T>> {
+fn vec_to_option<T: Clone>(x: &[T]) -> Vec<Option<T>> {
     x.iter().map(|item| Some(item.clone())).collect()
 }
 
-fn option_to_vec<T: Clone>(x: Vec<Option<T>>) -> Vec<T> {
+fn option_to_vec<T: Clone>(x: &[Option<T>]) -> Vec<T> {
     x.iter().map(|item| {
         match item {
             Some(u) => u.clone(),
@@ -46,7 +46,7 @@ fn gibbs_next<T: Clone, R: Rng>(
         result[i] = None;
         result = vec_to_option(&pd.sample(&result, rng));
     }
-    option_to_vec(result)
+    option_to_vec(&result)
 }
 
 pub fn gibbs<T: Clone, R: Rng>(
@@ -73,6 +73,6 @@ pub fn gibbs<T: Clone, R: Rng>(
         let next_val = local_next(result[i - 1].clone(), rng);
         result.push(next_val);
     }
-    return result;
+    result
 }
 
