@@ -11,6 +11,18 @@ pub trait ProposalDistribution {
     fn pdf(&self, x: &Vec<f64>) -> f64;
 }
 
+fn vec_to_option(x: &Vec<f64>) -> Vec<Option<f64>> {
+    x.iter().map(|item| Some(item.clone())).collect()
+}
+
+fn option_to_vec(x: Vec<Option<f64>>) -> Vec<f64> {
+    x.iter().map(|item| {
+        match item {
+            Some(u) => u.clone(),
+            None => panic!("Vector contains a None value!")
+        }
+    }).collect()
+}
 
 /// Draws the next item in the chain using Gibbs sampling.
 /// With Gibbs sampling, we iterate over the elements of x, sampling
@@ -24,29 +36,32 @@ pub trait ProposalDistribution {
 /// density to calculate the correcting ratio for MH.
 /// * `rng`: random seed used for this thread.
 fn gibbs_next<R: Rng>(
-    x: &Vec<f64>,
-    pi: fn(&Vec<f64>) -> f64,
+    x: Vec<f64>,
     pd: &impl ProposalDistribution,
     rng: &mut R,
 ) -> Vec<f64>
 {
-    x.clone()
+    let mut result: Vec<Option<f64>> = vec_to_option(&x);
+    for i in 0..result.len() {
+        result[i] = None;
+        result = vec_to_option(&pd.sample(&result, rng));
+    }
+    option_to_vec(result)
 }
 
 pub fn gibbs<R: Rng>(
     initial: Vec<f64>,
-    pi: fn(&Vec<f64>) -> f64,
     proposal: impl ProposalDistribution,
     rng: &mut R,
 ) -> Vec<Vec<f64>>
 {
-    let local_next = |x: &Vec<f64>, rng: &mut R| gibbs_next(x, pi, &proposal, rng);
+    let local_next = |x, rng: &mut R| gibbs_next(x, &proposal, rng);
 
     // Execute warmup
     let n_warmup = 1e5 as usize;
     let mut x = initial;
     for _ in 1..n_warmup {
-        x = local_next(&x, rng);
+        x = local_next(x, rng);
     }
 
     // Start running the simulation
@@ -55,7 +70,7 @@ pub fn gibbs<R: Rng>(
     result.push(x);
 
     for i in 1..n {
-        let next_val = local_next(&result[i - 1], rng);
+        let next_val = local_next(result[i - 1].clone(), rng);
         result.push(next_val);
     }
     return result;

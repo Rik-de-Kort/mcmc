@@ -24,20 +24,11 @@ impl ProposalDistribution for Proposal {
                 Some(x) => *x
             }
         }).collect()
-
-     //    P {
-     //        x: p.x + self.norm.sample(rng),
-     //        y: p.y + self.norm.sample(rng),
-     //    }
     }
 
     fn pdf(&self, p: &Vec<f64>) -> f64 {
         exp(-p[0].powi(2)) * exp(-p[0].powi(2))
     }
-}
-
-fn pi(p: &Vec<f64>) -> f64 {
-    exp(-p[0].powi(2)) * exp(-p[1].powi(2))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -47,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         norm: Normal::new(0.0, 1.0).unwrap(),
     };
     let initial = vec![0.0, 0.0];
-    let result = gibbs(initial, pi, prop, &mut rng);
+    let result = gibbs(initial, prop, &mut rng);
 
     output::write_vec_to_csv(result)
 }
