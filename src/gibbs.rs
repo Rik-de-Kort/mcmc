@@ -41,10 +41,9 @@ fn gibbs_next<R: Rng>(x: Vec<f64>, pd: &impl ProposalDistribution, rng: &mut R) 
         result[i] = None;
         result = vec_to_option(&pd.sample(&result, rng));
     }
-    option_to_vec(&result)
+    option_to_vec(result)
 }
 
-<<<<<<< HEAD
 pub fn gibbs_hist<R: Rng>(
     initial: Vec<f64>,
     proposal: impl ProposalDistribution,
