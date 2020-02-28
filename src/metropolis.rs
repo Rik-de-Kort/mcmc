@@ -60,7 +60,7 @@ pub fn metropolis<T: Copy, R: Rng>(
         let next_val = local_next(result[i - 1], rng);
         result.push(next_val);
     }
-    return result;
+    result
 }
 
 #[cfg(test)]

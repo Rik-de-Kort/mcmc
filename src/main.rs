@@ -15,20 +15,24 @@ struct Proposal {
 }
 
 impl ProposalDistribution for Proposal {
-    fn sample<R: Rng>(&self, p: &Vec<Option<f64>>, rng: &mut R) -> Vec<f64> {
+    fn sample<R: Rng>(&self, p: &[Option<f64>], rng: &mut R) -> Vec<f64> {
         assert!(p.len() == 2); // Panic if not 2d
 
-        p.iter().map( | item | {
-            match item {
+        p.iter()
+            .map(|item| match item {
                 None => self.norm.sample(rng),
-                Some(x) => *x
-            }
-        }).collect()
+                Some(x) => *x,
+            })
+            .collect()
     }
 
-    fn pdf(&self, p: &Vec<f64>) -> f64 {
+    fn pdf(&self, p: &[f64]) -> f64 {
         exp(-p[0].powi(2)) * exp(-p[0].powi(2))
     }
+}
+
+fn f(x: &[f64]) -> f64 {
+    1.0
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -38,7 +42,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         norm: Normal::new(0.0, 1.0).unwrap(),
     };
     let initial = vec![0.0, 0.0];
-    let result = gibbs(initial, prop, &mut rng);
+    let result = gibbs(initial, prop, vec![f], &mut rng);
+    println!("{}", result);
 
-    output::write_vec_to_csv(result)
+    // output::write_vec_to_csv(result)
+    Ok(())
 }

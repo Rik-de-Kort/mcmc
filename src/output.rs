@@ -34,11 +34,10 @@ pub fn get_hist(data: Vec<f64>, n_buckets: usize) -> (Vec<f64>, Vec<usize>) {
         let i = ((x - min) / bucket_size).floor() as usize;
         let i = if i == n_buckets { n_buckets - 1 } else { i };
 
-        histogram[i] = histogram[i] + 1;
+        histogram[i] += histogram[i];
     }
 
     let bins: Vec<f64> = (0..n_buckets)
-        .into_iter()
         .map(|i| min + (i as f64 + 0.5) * bucket_size)
         .collect();
 
