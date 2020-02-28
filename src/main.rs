@@ -21,10 +21,9 @@ impl ProposalDistribution for Proposal {
         p.iter()
             .map(|item| match item {
                 None => self.norm.sample(rng),
-                Some(x) => *x,
-            })
-            .collect()
-    }
+                Some(x) => *x
+            }
+        }).collect() }
 
     fn pdf(&self, p: &[f64]) -> f64 {
         exp(-p[0].powi(2)) * exp(-p[0].powi(2))
