@@ -70,13 +70,12 @@ pub fn gibbs_hist<R: Rng>(
     result
 }
 
-pub fn gibbs<R: Rng>(
+pub fn point_estimate<R: Rng>(
     initial: Vec<f64>,
     proposal: impl ProposalDistribution,
     fs: Vec<impl Fn(&[f64]) -> f64>,
     rng: &mut R,
-) -> f64 {
-    let f = &fs[0];
+) -> Vec<f64> {
     let local_next = |x, rng: &mut R| gibbs_next(x, &proposal, rng);
 
     // Execute warmup
@@ -87,12 +86,20 @@ pub fn gibbs<R: Rng>(
     }
 
     // Start running the simulation
+    // Result is a vec of the mean value of f(x) for the f in fs
     let n = 1e6 as usize;
-    let mut result = f(&x);
+    let mut result = (&fs)
+        .iter()
+        .map(|f| f(&x))
+        .collect::<Vec<_>>();
 
     for i in 1..n {
         x = local_next(x, rng);
-        result = ((i as f64) * result + f(&x)) / (i + 1) as f64;
+        result = result
+            .iter()
+            .zip(&fs)
+            .map(|(c, f)| ((i as f64) * c + f(&x)) / (i + 1) as f64)
+            .collect();
     }
     result
 }
