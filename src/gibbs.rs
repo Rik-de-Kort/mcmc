@@ -1,4 +1,9 @@
-use ndarray_rand::rand::Rng;
+use ndarray_rand::rand::{thread_rng, Rng};
+
+pub struct GibbsChain<D> {
+    pub x: Vec<f64>,
+    pub pd: D,
+}
 
 /// Proposal distribution for Gibbs sampling
 /// We use the option type to indicate absence of values
@@ -9,6 +14,21 @@ pub trait ProposalDistribution {
     // Possible fall through if x and y are not complimentary
     // Todo: figure out some way to have an assert in here
     fn pdf(&self, x: &[f64]) -> f64;
+}
+
+impl<D: ProposalDistribution> Iterator for GibbsChain<D> {
+    type Item = Vec<f64>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut rng = thread_rng();
+        let mut result: Vec<Option<f64>> = vec_to_option(&self.x);
+        for i in 0..result.len() {
+            result[i] = None;
+            result = vec_to_option(&self.pd.sample(&result, &mut rng));
+        }
+        self.x = option_to_vec(result);
+        Some(self.x.clone())
+    }
 }
 
 fn vec_to_option(x: &[f64]) -> Vec<Option<f64>> {
@@ -24,82 +44,15 @@ fn option_to_vec(x: Vec<Option<f64>>) -> Vec<f64> {
         .collect()
 }
 
-/// Draws the next item in the chain using Gibbs sampling.
-/// With Gibbs sampling, we iterate over the elements of x, sampling
-/// each coordinate in turn, conditional on the previous ones.
-///
-/// Arguments:
-///
-/// * `x`: current item in the Markov chain
-/// * `pi`: non-normalized density of the distribution to approximate
-/// * `proposal`: conditional sampler to draw new proposals from. We need access to the underlying
-/// density to calculate the correcting ratio for MH.
-/// * `rng`: random seed used for this thread.
-fn gibbs_next<R: Rng>(x: Vec<f64>, pd: &impl ProposalDistribution, rng: &mut R) -> Vec<f64> {
-    let mut result: Vec<Option<f64>> = vec_to_option(&x);
-    for i in 0..result.len() {
-        result[i] = None;
-        result = vec_to_option(&pd.sample(&result, rng));
-    }
-    option_to_vec(result)
-}
-
-pub fn gibbs_hist<R: Rng>(
-    initial: Vec<f64>,
-    proposal: impl ProposalDistribution,
-    rng: &mut R,
-) -> Vec<Vec<f64>> {
-    let local_next = |x, rng: &mut R| gibbs_next(x, &proposal, rng);
-
-    // Execute warmup
-    let n_warmup = 1e5 as usize;
-    let mut x = initial;
-    for _ in 1..n_warmup {
-        x = local_next(x, rng);
-    }
-
-    // Start running the simulation
-    let n = 1e6 as usize;
-    let mut result = Vec::with_capacity(n);
-    result.push(x);
-
-    for i in 1..n {
-        let next_val = local_next(result[i - 1].clone(), rng);
-        result.push(next_val);
-    }
-    result
-}
-
-pub fn point_estimate<R: Rng>(
-    initial: Vec<f64>,
-    proposal: impl ProposalDistribution,
-    fs: Vec<impl Fn(&[f64]) -> f64>,
-    rng: &mut R,
-) -> Vec<f64> {
-    let local_next = |x, rng: &mut R| gibbs_next(x, &proposal, rng);
-
-    // Execute warmup
-    let n_warmup = 1e5 as usize;
-    let mut x = initial;
-    for _ in 1..n_warmup {
-        x = local_next(x, rng);
-    }
-
-    // Start running the simulation
-    // Result is a vec of the mean value of f(x) for the f in fs
-    let n = 1e6 as usize;
-    let mut result = (&fs)
-        .iter()
-        .map(|f| f(&x))
-        .collect::<Vec<_>>();
-
-    for i in 1..n {
-        x = local_next(x, rng);
-        result = result
-            .iter()
-            .zip(&fs)
-            .map(|(c, f)| ((i as f64) * c + f(&x)) / (i + 1) as f64)
-            .collect();
-    }
-    result
+pub fn point_estimate<D: ProposalDistribution>(
+    chain: GibbsChain<D>,
+    f: impl Fn(Vec<f64>) -> f64,
+) -> f64 {
+    let n = 1e6;
+    chain
+        .skip(1e5 as usize)
+        .take(n as usize)
+        .map(f)
+        .sum::<f64>()
+        / (n as f64)
 }

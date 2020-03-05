@@ -5,8 +5,7 @@ use ndarray_rand::rand_distr::Normal;
 
 use std::error::Error;
 
-use mcmc::gibbs::{point_estimate, ProposalDistribution};
-use mcmc::output;
+use mcmc::gibbs::{point_estimate, GibbsChain, ProposalDistribution};
 use mcmc::quality_of_life::*;
 
 // Defining the proposal distribution
@@ -31,27 +30,20 @@ impl ProposalDistribution for Proposal {
     }
 }
 
-fn f0(x: &[f64]) -> f64 {
+fn f0(x: Vec<f64>) -> f64 {
     x.iter().sum::<f64>() / x.len() as f64
 }
 
-fn f1(x: &[f64]) -> f64 {
-    x.iter().sum::<f64>()
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut rng = ndarray_rand::rand::thread_rng();
+    let proposal = Proposal {
+        norm: Normal::new(0.0, 1.0).unwrap(),
+    };
+    let gc = GibbsChain {
+        x: vec![0.0, 0.0],
+        pd: proposal,
+    };
+    let result = point_estimate(gc, f0);
 
-    let result = point_estimate(
-        vec![0.0, 0.0],
-        Proposal {
-            norm: Normal::new(0.0, 1.0).unwrap(),
-        },
-        [f0, f1].to_vec(),
-        &mut rng,
-    );
-    println!("{}, {}", result[0], result[1]);
-
-    // output::write_vec_to_csv(result)
+    println!("{}", result);
     Ok(())
 }
