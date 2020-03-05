@@ -46,6 +46,19 @@ pub fn std(v: &[f64]) -> f64 {
     sum / v.len() as f64
 }
 
+pub fn vec_to_option(x: &[f64]) -> Vec<Option<f64>> {
+    x.iter().map(|item| Some(*item)).collect()
+}
+
+pub fn option_to_vec(x: Vec<Option<f64>>) -> Vec<f64> {
+    x.iter()
+        .map(|item| match item {
+            Some(u) => *u,
+            None => panic!("Vector contains a None value!"),
+        })
+        .collect()
+}
+
 use ndarray_rand::rand::Rng;
 use ndarray_rand::rand_distr::Distribution;
 pub fn build_sampler<T, D: Distribution<T>, R: Rng>(d: D) -> impl Fn(&mut R) -> T {
